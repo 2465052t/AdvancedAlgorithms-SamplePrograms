@@ -52,7 +52,69 @@ void setupBalloons(FILE * in, int n) {
  * - n: 風船の数 number of balloons
  */
 result_t solve(int n) {
-  /* TODO */
+    // 風船を時刻順にソート
+    for(int i=0; i<n; i++){
+        for(int j=i+1; j<n; j++){
+            if(balloons[j].time < balloons[i].time){
+                balloon_t temp = balloons[i];
+                balloons[i] = balloons[j];
+                balloons[j] = temp;
+            }
+        }
+    }
+
+    int pos = 0;        // robot 位置
+    int t = 0;          // robot 現在時刻
+    int carry = 0;      // 所持風船数
+    int dist = 0;       // 総移動距離
+
+    for(int i=0; i<n; i++){
+        int target = balloons[i].pos;
+        int drop_t = balloons[i].time;
+
+        // 風船の場所まで移動時間計算
+        int travel = abs(pos - target) * (carry + 1);
+        int arrive = t + travel;
+
+        if(arrive > drop_t){
+            // 間に合わない → NG
+            result_t r = { false, i+1 }; // 何個目で失敗したか
+            return r;
+        }
+
+        // 移動成功
+        dist += abs(pos - target);
+        t = arrive;
+        pos = target;
+
+        // 風船を拾う
+        carry++;
+
+        // 3 個拾ったら家へ戻る
+        if(carry == 3){
+            int back_travel = abs(pos - 0) * (carry + 0);
+            // ただし移動速度は「3 個持ってるので 4 倍遅い」
+            back_travel = abs(pos - 0) * (carry + 1);
+
+            dist += abs(pos - 0);
+            t += back_travel;
+            pos = 0;
+            carry = 0;
+        }
+    }
+
+    // 最後に家へ戻る必要がある場合
+    if(pos != 0){
+        int back_travel = abs(pos - 0) * (carry + 1);
+        dist += abs(pos - 0);
+        t += back_travel;
+        pos = 0;
+        carry = 0;
+    }
+
+    result_t r = { true, dist };
+    return r;
+}
 
 	result_t result = { true, 42 }; /* 全ての風船を回収出来た，かかった距離は42 */
   // result_t result = {false, 3};/* 風船3個目は回収不能でした */
